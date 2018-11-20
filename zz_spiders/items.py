@@ -37,3 +37,11 @@ class ZTCCampaignRealTimeDataItem(scrapy.Item):
     hour = scrapy.Field()
     redis_date = scrapy.Field()
     pass
+
+
+class ZTCShopHistoryDataItem(BaseItem):
+    shopname = scrapy.Field()
+    table = scrapy.Field()
+    key = scrapy.Field()
+    value = scrapy.Field()
+    pass

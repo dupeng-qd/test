@@ -11,8 +11,8 @@
 avg_spiders = 100.0
 
 # url
-api_zhitongche_url = 'http://jupinzhuanche.hz.taeapp.com/zz-jushita-zhitongche-pro'
-api_zuanzhan_url   = 'http://jupinzhizuan.hz.taeapp.com/zz-jushita-zuanzhan-pro'
+api_zhitongche_url = 'http://jupinzhuanche.hz.taeapp.com/zz-jushita-zhitongche-dev'
+api_zuanzhan_url = 'https://jupinzhizuan.hz.taeapp.com/zz-jushita-zuanzhan-dev/'
 
 env = {
   # mysql 配置数据
@@ -39,10 +39,20 @@ env = {
 
   # redis 配置数据
   'redis_config': {
-    'host': '192.168.1.63',
+    # 'host': '192.168.1.63',
+    'host': '127.0.0.1',
     'port': '6379',
     'password': None,
     },
+
+  'mysql_shop_data': {
+    'db_host': '192.168.1.196',  # 设置默认数据连接地址
+    'db_port': '3306',  # 设置默认端口号
+    'db_name': 'jupin_zhizuan',  # 设置默认数据库
+    'username': 'root',  # 设置默认用户名
+    'password': 'root',  # 设置默认密码
+    'charset': 'utf8',  # 设置默认字符集
+  },
 
   #scrapyd 配置地址
   'scrapyd_url': 'http://localhost:6800'

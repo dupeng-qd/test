@@ -13,15 +13,19 @@ from zz_spiders.env import avg_spiders
 from zz_spiders.env import env
 from multiprocessing import Process
 from zz_spiders.service.get_shop_list import get_shops_list
+from zz_spiders.utils.date import Date
 import math
 
 
 def spider_subprocess(spider_index_begin, spider_index_end):
-    shell = env['scrapyd_url'] + '/schedule.json -d project=zz_spiders -d spider=zhitongche.real_time_data -d begin={} -d end={}'.format(spider_index_begin, spider_index_end)
-    os.system('curl ' + shell)
-    shell = env['scrapyd_url'] + '/schedule.json -d project=zz_spiders -d spider=zhitongche.campaign.real_time_data -d begin={} -d end={}'.format(spider_index_begin, spider_index_end)
-    os.system('curl ' + shell)
-
+    # shell = env['scrapyd_url'] + '/schedule.json -d project=zz_spiders -d spider=zhitongche.real_time_data -d begin={} -d end={}'.format(spider_index_begin, spider_index_end)
+    # os.system('curl ' + shell)
+    # shell = env['scrapyd_url'] + '/schedule.json -d project=zz_spiders -d spider=zhitongche.campaign.real_time_data -d begin={} -d end={}'.format(spider_index_begin, spider_index_end)
+    # os.system('curl ' + shell)
+    # if Date().get_now_hour() == 5:
+    #     shell = env['scrapyd_url'] + '/schedule.json -d project=zz_spiders -d spider=zhitongche.shop.shop_history_data -d begin={} -d end={}'.format(spider_index_begin, spider_index_end)
+    #     os.system('curl ' + shell)
+    os.system('scrapy crawl zhitongche.campaign.real_time_data -a begin={} -a end={}'.format(spider_index_begin, spider_index_end))
 
 def run_spider(shop_list=None):
     spider_num = math.ceil(len(shop_list)/avg_spiders)

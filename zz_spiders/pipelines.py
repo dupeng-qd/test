@@ -6,11 +6,12 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import datetime
 from .utils.mongoDB import Mongodb
-
+from zz_spiders.utils.data import Data
+from zz_spiders.spiders.zhitongche.shop.shop_information import ShopInformation
 from zz_spiders.utils.redis import RedisDatabase
 
-class AddDateTimePipeline(object):
 
+class AddDateTimePipeline(object):
     def process_item(self, item, spider):
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         item["created_at"] = now
@@ -35,10 +36,35 @@ class SaveCampaignDataToRedis(object):
 
 
 class SaveDataToMongodb(object):
-
     client = None
-    def process_item(self, item, spider):
 
+    def process_item(self, item, spider):
         self.client = Mongodb(spider.mongodb_collection, 'zz_web')
         self.client.save_data(item)
         self.client.close()
+
+
+class SaveShopDataToMysql(object):
+    def process_item(self, item, spider):
+        table = item['table']
+        key = item['key']
+        value = item['value']
+        if 'f_nick' in key:
+            key.append('created_at')
+            value.append(item['created_at'])
+
+            key.append('updated_at')
+            value.append(item['updated_at'])
+        else:
+            key.append('f_nick')
+            value.append(item['shopname'])
+
+        Data().mysql_column(table, key, value)
+
+    def close_spider(self, spider):
+        if spider.name == 'zhitongche.shop.shop_history_data':
+            ShopInformation().get_shop_name()
+
+
+# if __name__ == "__main__":
+#     SaveShopDataToMysql().mysql_column('t_shop_data', ['f_cpc'], ['aa'])

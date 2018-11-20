@@ -44,7 +44,7 @@ class RealTimeData(scrapy.Spider):
 
         for i in self.shop_list:
             shopname = i['shop_name']
-            if curr_hour == 4:
+            if curr_hour == 5:
                 yesterday = datetime.date.today() - datetime.timedelta(days=1)
                 yesterday = yesterday.strftime('%Y-%m-%d')
                 url_history_time = env.api_zhitongche_url + '/sdk.single.php?shopName={0}&date=' + yesterday
@@ -56,7 +56,7 @@ class RealTimeData(scrapy.Spider):
                 request_real_time.meta['shopname'] = shopname
 
                 request_history_time.meta['redis_date'] = history_time_date
-                request_real_time.meta['redis_date'] = history_time_date
+                request_real_time.meta['redis_date'] = real_time_date
 
                 request_history_time.meta['hour'] = 23
                 request_real_time.meta['hour'] = hour
@@ -82,7 +82,7 @@ class RealTimeData(scrapy.Spider):
             )
 
         curr_hour = datetime.datetime.now().hour
-        if curr_hour == 4:
+        if curr_hour == 6:
             yesterday = datetime.date.today() - datetime.timedelta(days=1)
             yesterday = yesterday.strftime('%Y%m%d')
             key_7 = 'shop_data:{}:{}:{}'.format(shopname, yesterday, '07')
@@ -91,25 +91,63 @@ class RealTimeData(scrapy.Spider):
 
             r_client = RedisDatabase()
 
-            if r_client.exists(key_23):
+            cost_7 = 0
+            percent_7 = 0
+            percent_15 = 0
+            cost_15_all = 0
+
+            # 如果计划在7/15点之前暂停，但在这一天是有推广时间段的
+            key_7_list = ['06', '05', '04', '03', '02', '01', '00']
+            key_15_list = ['14', '13', '12', '11', '10', '09', '08']
+
+            if r_client.exists(key_15):     # 取15时的花费数据
+                data_15 = r_client.get_data(key_15)
+                cost_15_all = float(json.loads(data_15)['cost'])
+
+            if r_client.exists(key_23):     # 取23时的花费数据
                 data_all = r_client.get_data(key_23)
                 cost_all = float(json.loads(data_all)['cost'])
 
+                if (cost_all - cost_15_all) < 0:    # 如果 23时 的数据小于 15 时的数据，用22 时的数据计算进度条
+                    key_22 = 'shop_data:{}:{}:{}'.format(shopname, yesterday, '22')
+                    data_all = r_client.get_data(key_22)
+                    cost_all = float(json.loads(data_all)['cost'])
+
                 if cost_all != 0:
-                    data_7 = r_client.get_data(key_7)
-                    cost_7 = float(json.loads(data_7)['cost'])
-                    percent_7 = '{:.2f}'.format(100 * cost_7/cost_all)
-                    key = 'shop_percent:{}:{}'.format(shopname, yesterday)
+                    if r_client.exists(key_7):      # 计算7点的花费，进而求7点的花费占比
+                        data_7 = r_client.get_data(key_7)
+                        cost_7 = float(json.loads(data_7)['cost'])
+                        percent_7 = '{:.2f}'.format(100 * cost_7/cost_all)
+                    else:
+                        for i in key_7_list:
+                            key = 'shop_data:{}:{}:{}'.format(shopname, yesterday, i)
+                            if r_client.exists(key):
+                                data_7 = r_client.get_data(key)
+                                cost_7 = float(json.loads(data_7)['cost'])
+                                percent_7 = '{:.2f}'.format(100 * cost_7 / cost_all)
+                                break
 
+                    if r_client.exists(key_15):     # 计算15时的花费，求15点的花费占比
+                        data_15 = r_client.get_data(key_15)
+                        cost_15_all = float(json.loads(data_15)['cost'])
+                        cost_15 = cost_15_all - cost_7
+                        percent_15 = '{:.2f}'.format(100 * cost_15/cost_all)
+                    else:
+                        for i in key_15_list:
+                            key = 'shop_data:{}:{}:{}'.format(shopname, yesterday, i)
+                            if r_client.exists(key):
+                                data_15 = r_client.get_data(key)
+                                cost_15_all = float(json.loads(data_15)['cost'])
+                                cost_15 = cost_15_all - cost_7
+                                percent_15 = '{:.2f}'.format(100 * cost_15 / cost_all)
+                                break
+                            else:
+                                cost_15_all = cost_7    # 8-16之间没数据，当前总数据即 八点的总数据
 
-                    data_15 = r_client.get_data(key_15)
-                    cost_15_all = float(json.loads(data_15)['cost'])
-                    cost_15 = cost_15_all - cost_7
-                    percent_15 = '{:.2f}'.format(100 * cost_15/cost_all)
+                    percent_23 = '{:.2f}'.format(100 * (cost_all-cost_15_all)/cost_all)     # 23时的花费占比
 
-                    percent_23 = '{:.2f}'.format(100 * (cost_all-cost_15_all)/cost_all)
-
-                    percent = [percent_7, percent_15, percent_23]
+                    percent = [percent_7, percent_15, percent_23]   # 进度条
                     percent = json.dumps(percent)
 
+                    key = 'shop_percent:{}:{}'.format(shopname, yesterday)
                     r_client.save_data(key, percent)
