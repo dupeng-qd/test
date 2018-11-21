@@ -8,7 +8,10 @@ import datetime
 from .utils.mongoDB import Mongodb
 from zz_spiders.utils.data import Data
 from zz_spiders.spiders.zhitongche.shop.shop_information import ShopInformation
+from zz_spiders.spiders.zhitongche.shop.shop_history_data_handle import ShopHistoryDataHandle
 from zz_spiders.utils.redis import RedisDatabase
+from zz_spiders.utils.date import Date
+import re
 
 
 class AddDateTimePipeline(object):
@@ -64,6 +67,33 @@ class SaveShopDataToMysql(object):
     def close_spider(self, spider):
         if spider.name == 'zhitongche.shop.shop_history_data':
             ShopInformation().get_shop_name()
+
+
+class SaveShopHistoryDataToMongodb(object):
+    def process_item(self, item, spider):
+        print(item['shopname'], item['status'], item['data'])
+        if item['status'] == 1:
+            client = Mongodb('zhitongche_history_data', 'zz_web')
+        else:
+            client = Mongodb('zuanzhan_history_data', 'zz_web')
+
+        client.save_data(item)
+        client.close()
+
+    def open_spider(self, spider):
+        client = Mongodb('zhitongche_history_data', 'zz_web')
+        client.delete_many({
+            "created_at": {'$gte': Date().get_today() + ' 00:00:00', '$lte': Date().get_today() + ' 23:59:59'}
+        })
+        client = Mongodb('zuanzhan_history_data', 'zz_web')
+        client.delete_many({
+            "created_at": {'$gte': Date().get_today() + ' 00:00:00', '$lte': Date().get_today() + ' 23:59:59'}
+        })
+
+    def close_spider(self, spider):
+        if spider.name == 'zhitongche.shop.shop_history_data':
+            ShopHistoryDataHandle().handle_main()
+            # ShopInformation().get_shop_name()
 
 
 # if __name__ == "__main__":

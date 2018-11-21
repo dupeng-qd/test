@@ -25,7 +25,7 @@ def spider_subprocess(spider_index_begin, spider_index_end):
     # if Date().get_now_hour() == 5:
     #     shell = env['scrapyd_url'] + '/schedule.json -d project=zz_spiders -d spider=zhitongche.shop.shop_history_data -d begin={} -d end={}'.format(spider_index_begin, spider_index_end)
     #     os.system('curl ' + shell)
-    os.system('scrapy crawl zhitongche.campaign.real_time_data -a begin={} -a end={}'.format(spider_index_begin, spider_index_end))
+    os.system('scrapy crawl zhitongche.shop.shop_history_data -a begin={} -a end={}'.format(spider_index_begin, spider_index_end))
 
 def run_spider(shop_list=None):
     spider_num = math.ceil(len(shop_list)/avg_spiders)

@@ -45,3 +45,10 @@ class ZTCShopHistoryDataItem(BaseItem):
     key = scrapy.Field()
     value = scrapy.Field()
     pass
+
+
+class ShopHistoryDataItem(BaseItem):
+    status = scrapy.Field()
+    budget = scrapy.Field()
+    shopname = scrapy.Field()
+    data = scrapy.Field()

@@ -74,8 +74,8 @@ class ShopInformation:
         yesterday = yesterday.strftime('%Y-%m-%d')
 
         results = session.query(t_shop_data.f_budget).filter(
-            t_shop_data.f_date == yesterday,
-            t_shop_data.f_nick == shop_name,
+            t_shop_data.created_at.like(yesterday+'%'),
+            t_shop_data.f_nick_name == shop_name,
         )
         if len(results.all()) == 0:
             key.append('f_budget')
@@ -124,20 +124,20 @@ class ShopInformation:
         zuanzhan = get_shops_list(flag='zuanzhan')  # 钻展
         zhizuan = get_shops_list(flag='zhizuan')    # 直钻
 
-        for shop in no_grant:
-            key.append('f_cooperation_products')
-            value.append(0)
-            self.get_shop_name_details(shop['shop_name'], key, value)
+        # for shop in no_grant:
+        #     key.append('f_cooperation_products')
+        #     value.append(0)
+        #     self.get_shop_name_details(shop['shop_name'], key, value)
 
         for shop in zhitongche:
             key.append('f_cooperation_products')
             value.append(1)                 # value.append('直通车')
             self.get_shop_name_details(shop['shop_name'], key, value)
 
-        for shop in zuanzhan:
-            key.append('f_cooperation_products')
-            value.append(2)            # value.append('钻展')
-            self.get_shop_name_details(shop['shop_name'], key, value)
+        # for shop in zuanzhan:
+        #     key.append('f_cooperation_products')
+        #     value.append(2)            # value.append('钻展')
+        #     self.get_shop_name_details(shop['shop_name'], key, value)
 
         for shop in zhizuan:
             key.append('f_cooperation_products')
